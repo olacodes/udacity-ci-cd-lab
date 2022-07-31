@@ -4,6 +4,17 @@ orbs:
   # welcome: circleci/welcome-orb@0.4.1
   aws-cli: circleci/aws-cli@2.0.3
 
+commands:
+  destroy_environment:
+    steps:
+      - run:
+          name: Destroy Environment
+          # ${CIRCLE_WORKFLOW_ID} is a Built-in environment variable
+          # ${CIRCLE_WORKFLOW_ID:0:5} takes the first 5 chars of the variable CIRCLE_CI_WORKFLOW_ID
+          when: on_fail
+          command: |
+            aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}
+
 # Define the jobs we want to run for this project
 jobs:
   create_infrastructure: # Choose any name, such as `build`
@@ -19,27 +30,37 @@ jobs:
               --template-file template.yml \
               --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
               --region us-east-1
+      - destroy_environment
 
-  config_infrastructure:
+  smoke_test:
     docker:
-      - image: python:3.7-alpine3.11
+      - image: alpine:latest
     steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["68:08:b8:3e:91:1f:28:84:4d:f2:5e:95:c2:16:e6:b9"]
       - run:
-          name: Install Ansible
-          command: |
-            apk add --update ansible
-      - run:
-          name: Configure Server
-          command: |
-            ansible-playbook -i inventory main-remote.yml
+          name: Smoke Test Job
+          # Fail the job intentionally to simulate an error.
+          command: return 1
+      - destroy_environment
 
-
+  # config_infrastructure:
+  #   docker:
+  #     - image: python:3.7-alpine3.11
+  #   steps:
+  #     - checkout
+  #     - add_ssh_keys:
+  #         fingerprints: ["68:08:b8:3e:91:1f:28:84:4d:f2:5e:95:c2:16:e6:b9"]
+  #     - run:
+  #         name: Install Ansible
+  #         command: |
+  #           apk add --update ansible
+  #     - run:
+  #         name: Configure Server
+  #         command: |
+  #           ansible-playbook -i inventory main-remote.yml
 
 # Sequential workflow
 workflows:
   udacityCICDWorkflow:
     jobs:
-      - config_infrastructure
+      - create_infrastructure
+      - smoke_test
