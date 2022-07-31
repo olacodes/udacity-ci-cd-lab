@@ -20,8 +20,23 @@ jobs:
               --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
               --region us-east-1
 
+  config_infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+        fingerprints: ["68:08:b8:3e:91:1f:28:84:4d:f2:5e:95:c2:16:e6:b9"]
+      - run:
+          name: Install Ansible
+          command: |
+            apk add --update ansible
+            ansible-playbook -i inventory main-remote.yml
+
+
+
 # Sequential workflow
 workflows:
   udacityCICDWorkflow:
     jobs:
-      - create_infrastructure
+      - config_infrastructure

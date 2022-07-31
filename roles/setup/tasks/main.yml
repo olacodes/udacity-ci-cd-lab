@@ -1,0 +1,41 @@
+---
+- name: "update apt packages."
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: "upgrade packages"
+  become: yes
+  apt:
+    upgrade: yes
+
+
+- name: Install the nodejs
+  apt:
+    name: ["nodejs", "npm"]
+    state: present
+    update_cache: yes
+
+- name: Install the pm2
+  become: yes
+  npm:
+    name: "pm2"
+    global: yes
+    production: yes
+    state: present
+
+- name: Creates a web directory
+  file:
+    path: ~/web
+    state: directory
+
+- name: "Install index page"
+  copy:
+    src: "files/index.js"
+    dest: "~/web/index.js"
+    backup: yes
+
+- name: Executing Node
+  shell: |
+    pm2 start ~/web/index.js -f
+
