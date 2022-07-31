@@ -42,4 +42,4 @@ jobs:
 workflows:
   udacityCICDWorkflow:
     jobs:
-      - config_infrastructure
+      - create_infrastructure
