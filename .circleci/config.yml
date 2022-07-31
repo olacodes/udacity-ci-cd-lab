@@ -31,6 +31,9 @@ jobs:
           name: Install Ansible
           command: |
             apk add --update ansible
+      - run:
+          name: Configure Server
+          command: |
             ansible-playbook -i inventory main-remote.yml
 
 
